@@ -382,17 +382,28 @@ given a <a for=/>fetch timing info</a> <var>timingInfo</var>, return a new
 </div>
 
 <div algorithm>
-<p>To <dfn>queue a fetch task</dfn>, given an algorithm <var>algorithm</var>, a
-<a for=/>global object</a> or a <a for=/>parallel queue</a> <var>taskDestination</var>, run these
-steps:
+<p>To <dfn>queue a fetch task</dfn>, given
+an algorithm <var>algorithm</var>,
+a <a for=/>global object</a> or a <a for=/>parallel queue</a> <var>taskDestination</var>,
+and an AsyncContext <var>asyncContext</var>,
+run these steps:
 
 <ol>
+ <li>
+  <p>Let <var>wrappedAlgorithm</var> be an algorithm that runs the following steps:
+  <ol>
+   <li><p>Let <var>oldAsyncContext</var> be AsyncContextSwap(<var>asyncContext</var>).
+   <li><p>Run <var>algorithm</var>.
+   <li><p>Perform AsyncContextSwap(<var>oldAsyncContext</var>).
+  </ol>
+ </li>
+
  <li><p>If <var>taskDestination</var> is a <a for=/>parallel queue</a>, then
- <a lt="enqueue steps" for="parallel queue">enqueue</a> <var>algorithm</var> to
+ <a lt="enqueue steps" for="parallel queue">enqueue</a> <var>wrappedAlgorithm</var> to
  <var>taskDestination</var>.
 
  <li><p>Otherwise, <a>queue a global task</a> on the <a>networking task source</a> with
- <var>taskDestination</var> and <var>algorithm</var>.
+ <var>taskDestination</var> and <var>wrappedAlgorithm</var>.
 </ol>
 </div>
 
@@ -1457,13 +1468,17 @@ result of <a for=BodyInit>safely extracting</a> <var>bytes</var>.
 <hr>
 
 <div algorithm>
-<p>To <dfn export for=body>incrementally read</dfn> a <a for=/>body</a> <var>body</var>, given an
-algorithm <var>processBodyChunk</var>, an algorithm <var>processEndOfBody</var>, an algorithm
-<var>processBodyError</var>, and an optional null, <a for=/>parallel queue</a>, or
-<a for=/>global object</a> <var>taskDestination</var> (default null), run these steps.
+<p>To <dfn export for=body>incrementally read</dfn> a <a for=/>body</a> <var>body</var>, given
+an algorithm <var>processBodyChunk</var>,
+an algorithm <var>processEndOfBody</var>,
+an algorithm <var>processBodyError</var>,
+an AsyncContext <var>asyncContext</var>,
+and an optional null, <a for=/>parallel queue</a>, or <a for=/>global object</a>
+<var>taskDestination</var> (default null),
+run these steps.
 <var>processBodyChunk</var> must be an algorithm accepting a <a for=/>byte sequence</a>.
-<var>processEndOfBody</var> must be an algorithm accepting no arguments. <var>processBodyError</var>
-must be an algorithm accepting an exception.
+<var>processEndOfBody</var> must be an algorithm accepting no arguments.
+<var>processBodyError</var> must be an algorithm accepting an exception.
 
 <ol>
  <li><p>If <var>taskDestination</var> is null, then set <var>taskDestination</var> to the result of
@@ -1476,16 +1491,19 @@ must be an algorithm accepting an exception.
   <p class=note>This operation will not throw an exception.
 
  <li><p>Perform the <a>incrementally-read loop</a> given <var>reader</var>,
- <var>taskDestination</var>, <var>processBodyChunk</var>, <var>processEndOfBody</var>, and
- <var>processBodyError</var>.
+ <var>taskDestination</var>, <var>processBodyChunk</var>, <var>processEndOfBody</var>,
+ <var>processBodyError</var>, and <var>asyncContext</var>.
 </ol>
 </div>
 
 <div algorithm>
-<p>To perform the <dfn>incrementally-read loop</dfn>, given a {{ReadableStreamDefaultReader}} object
-<var>reader</var>, <a for=/>parallel queue</a> or <a for=/>global object</a>
-<var>taskDestination</var>, algorithm <var>processBodyChunk</var>, algorithm
-<var>processEndOfBody</var>, and algorithm <var>processBodyError</var>:
+<p>To perform the <dfn>incrementally-read loop</dfn>, given
+a {{ReadableStreamDefaultReader}} object <var>reader</var>,
+<a for=/>parallel queue</a> or <a for=/>global object</a> <var>taskDestination</var>,
+algorithm <var>processBodyChunk</var>,
+algorithm <var>processEndOfBody</var>,
+algorithm <var>processBodyError</var>,
+and AsyncContext <var>asyncContext</var>:
 
 <ol>
  <li>
@@ -1519,22 +1537,22 @@ must be an algorithm accepting an exception.
          <li><p>Run <var>processBodyChunk</var> given <var>bytes</var>.
 
          <li><p>Perform the <a>incrementally-read loop</a> given <var>reader</var>,
-         <var>taskDestination</var>, <var>processBodyChunk</var>, <var>processEndOfBody</var>, and
-         <var>processBodyError</var>.
+         <var>taskDestination</var>, <var>processBodyChunk</var>, <var>processEndOfBody</var>,
+         <var>processBodyError</var>, and <var>asyncContext</var>.
         </ol>
       </ol>
 
-     <li><p><a>Queue a fetch task</a> given <var>continueAlgorithm</var> and
-     <var>taskDestination</var>.
+     <li><p><a>Queue a fetch task</a> given <var>continueAlgorithm</var>,
+     <var>taskDestination</var> and <var>asyncContext</var>.
     </ol>
 
    <dt><a for="read request">close steps</a>
-   <dd><ol><li><p><a>Queue a fetch task</a> given <var>processEndOfBody</var> and
-   <var>taskDestination</var>.</ol>
+   <dd><ol><li><p><a>Queue a fetch task</a> given <var>processEndOfBody</var>,
+   <var>taskDestination</var> and <var>asyncContext</var>.</ol>
 
    <dt><a for="read request">error steps</a>, given <var>e</var>
-   <dd><ol><li><p><a>Queue a fetch task</a> to run <var>processBodyError</var> given <var>e</var>,
-   with <var>taskDestination</var>.</ol>
+   <dd><ol><li><p><a>Queue a fetch task</a> given <var>processBodyError</var> given <var>e</var>,
+   <var>taskDestination</var> and <var>asyncContext</var>.</ol>
   </dl>
 
  <li><p><a for=ReadableStreamDefaultReader>Read a chunk</a> from <var>reader</var> given
@@ -1543,12 +1561,15 @@ must be an algorithm accepting an exception.
 </div>
 
 <div algorithm>
-<p>To <dfn export for=body>fully read</dfn> a <a for=/>body</a> <var>body</var>, given an algorithm
-<var>processBody</var>, an algorithm <var>processBodyError</var>, and an optional null,
-<a for=/>parallel queue</a>, or <a for=/>global object</a> <var>taskDestination</var> (default
-null), run these steps. <var>processBody</var> must be an algorithm accepting a
-<a for=/>byte sequence</a>. <var>processBodyError</var> must be an algorithm optionally accepting an
-<a for=/>exception</a>.
+<p>To <dfn export for=body>fully read</dfn> a <a for=/>body</a> <var>body</var>, given
+an algorithm <var>processBody</var>,
+an algorithm <var>processBodyError</var>,
+an AsyncContext <var>asyncContext</var>,
+and an optional null, <a for=/>parallel queue</a>, or <a for=/>global object</a>
+<var>taskDestination</var> (default null),
+run these steps.
+<var>processBody</var> must be an algorithm accepting a <a for=/>byte sequence</a>.
+<var>processBodyError</var> must be an algorithm optionally accepting an <a for=/>exception</a>.
 
 <ol>
  <li><p>If <var>taskDestination</var> is null, then set <var>taskDestination</var> to the result of
@@ -1556,11 +1577,11 @@ null), run these steps. <var>processBody</var> must be an algorithm accepting a
 
  <li><p>Let <var>successSteps</var> given a <a>byte sequence</a> <var>bytes</var> be to
  <a>queue a fetch task</a> to run <var>processBody</var> given <var>bytes</var>, with
- <var>taskDestination</var>.
+ <var>taskDestination</var> and <var>asyncContext</var>.
 
  <li><p>Let <var>errorSteps</var> optionally given an <a for=/>exception</a> <var>exception</var> be
  to <a>queue a fetch task</a> to run <var>processBodyError</var> given <var>exception</var>, with
- <var>taskDestination</var>.
+ <var>taskDestination</var> and <var>asyncContext</var>.
 
  <li><p>Let <var>reader</var> be the result of <a for=ReadableStream>getting a reader</a> for
  <var>body</var>'s <a for=body>stream</a>. If that threw an exception, then run
@@ -4429,7 +4450,11 @@ the response. [[!HTTP-CACHING]]
    <a for=fetch>fetch group</a> list of <a for="fetch group">fetch records</a>.
   </ol>
 
- <li><p>Run <a>main fetch</a> given <var>fetchParams</var>.
+ <li><p>Let <var>asyncContext</var> be AsyncContextSnapshot().
+  <p class=XXX>I have not verified that this algorithm is always run in the event loop, but it is
+  in the XHR case I'm working on.
+
+ <li><p>Run <a>main fetch</a> given <var>fetchParams</var> and <var>asyncContext</var>.
 
  <li><p>Return <var>fetchParams</var>'s <a for="fetch params">controller</a>.
 </ol>
@@ -4468,9 +4493,13 @@ the response. [[!HTTP-CACHING]]
 <h3 id=main-fetch>Main fetch</h3>
 
 <div algorithm>
-<p>To <dfn id=concept-main-fetch>main fetch</dfn>, given a <a for=/>fetch params</a>
-<var>fetchParams</var> and an optional boolean <var>recursive</var> (default false), run these
-steps:
+<p>To <dfn id=concept-main-fetch>main fetch</dfn>, given
+a <a for=/>fetch params</a> <var>fetchParams</var>,
+an AsyncContext <var>asyncContext</var>,
+and an optional boolean <var>recursive</var> (default false),
+run these steps:
+
+<p class=note>This algorithm can be called from within a parallel execution.
 
 <ol>
  <li><p>Let <var>request</var> be <var>fetchParams</var>'s <a for="fetch params">request</a>.
@@ -4481,7 +4510,9 @@ steps:
  <a for=request>current URL</a> is not <a lt="is local">local</a>, then set <var>response</var> to a
  <a>network error</a>.
 
- <li><p>Run <a>report Content Security Policy violations for <var>request</var></a>.
+ <li><p>Run <a>report Content Security Policy violations for <var>request</var></a>
+  <span class=XXX>given <var>asyncContext</var></span>.
+  <p class=note>This can queue a task to fire a <code>securitypolicyviolation</code> event.
 
  <li><p><a>Upgrade <var>request</var> to a potentially trustworthy URL, if appropriate</a>.
 
@@ -4565,7 +4596,8 @@ steps:
      <li><p>Set <var>request</var>'s
      <a for=request>response tainting</a> to "<code>basic</code>".
 
-     <li><p>Return the result of running <a>scheme fetch</a> given <var>fetchParams</var>.
+     <li><p>Return the result of running <a>scheme fetch</a> given <var>fetchParams</var> and
+     <var>asyncContext</var>.
     </ol>
 
     <p class=note>HTML assigns any documents and workers created from <a for=/>URLs</a> whose
@@ -4584,7 +4616,8 @@ steps:
 
      <li><p>Set <var>request</var>'s <a for=request>response tainting</a> to "<code>opaque</code>".
 
-     <li><p>Return the result of running <a>scheme fetch</a> given <var>fetchParams</var>.
+     <li><p>Return the result of running <a>scheme fetch</a> given <var>fetchParams</var> and
+     <var>asyncContext</var>.
      <!-- file URLs end up here as they are not same-origin typically. -->
     </ol>
 
@@ -4604,7 +4637,7 @@ steps:
      "<code>cors</code>".
 
      <li><p>Let <var>corsWithPreflightResponse</var> be the result of running <a>HTTP fetch</a>
-     given <var>fetchParams</var> and true.
+     given <var>fetchParams</var>, <var>asyncContext</var>, and true.
 
      <li><p>If <var>corsWithPreflightResponse</var> is a <a>network error</a>, then
      <a>clear cache entries</a> using <var>request</var>.
@@ -4619,7 +4652,8 @@ steps:
      <a for=request>response tainting</a> to
      "<code>cors</code>".
 
-     <li><p>Return the result of running <a>HTTP fetch</a> given <var>fetchParams</var>.
+     <li><p>Return the result of running <a>HTTP fetch</a> given <var>fetchParams</var> and
+     <var>asyncContext</var>.
     </ol>
   </dl>
 
@@ -4741,7 +4775,7 @@ steps:
 
   <ol>
    <li><p>Let <var>processBodyError</var> be this step: run <a>fetch response handover</a> given
-   <var>fetchParams</var> and a <a>network error</a>.
+   <var>fetchParams</var>, a <a>network error</a>, and <var>asyncContext</var>.
 
    <li><p>If <var>response</var>'s <a for=response>body</a> is null, then run
    <var>processBodyError</var> and abort these steps.
@@ -4757,23 +4791,27 @@ steps:
      <li><p>Set <var>response</var>'s <a for=response>body</a> to <var>bytes</var>
      <a for="byte sequence">as a body</a>.
 
-     <li><p>Run <a>fetch response handover</a> given <var>fetchParams</var> and <var>response</var>.
+     <li><p>Run <a>fetch response handover</a> given <var>fetchParams</var>, <var>response</var>,
+     and <var>asyncContext</var>.
     </ol>
 
    <li><p><a for=body>Fully read</a> <var>response</var>'s <a for=response>body</a> given
    <var>processBody</var> and <var>processBodyError</var>.
   </ol>
 
- <li><p>Otherwise, run <a>fetch response handover</a> given <var>fetchParams</var> and
- <var>response</var>.
+ <li><p>Otherwise, run <a>fetch response handover</a> given <var>fetchParams</var>,
+ <var>response</var>, and <var>asyncContext</var>.
 </ol>
 </div>
 
 <hr>
 
 <div algorithm>
-<p>The <dfn id=fetch-finale>fetch response handover</dfn>, given a <a for=/>fetch params</a>
-<var>fetchParams</var> and a <a for=/>response</a> <var>response</var>, run these steps:
+<p>The <dfn id=fetch-finale>fetch response handover</dfn>, given
+a <a for=/>fetch params</a> <var>fetchParams</var>,
+an AsyncContext <var>asyncContext</var>,
+and a <a for=/>response</a> <var>response</var>,
+run these steps:
 
 <ol>
  <li><p>Let <var>timingInfo</var> be <var>fetchParams</var>'s
@@ -4853,7 +4891,8 @@ steps:
      <var>timingInfo</var>, <var>fetchParams</var>'s <a for="fetch params">request</a>'s
      <a for=request>URL</a>, <var>fetchParams</var>'s <a for="fetch params">request</a>'s
      <a for=request>initiator type</a>, <var>global</var>, <var>cacheState</var>,
-     <var>bodyInfo</var>, and <var>responseStatus</var>.
+     <var>bodyInfo</var>, <var>responseStatus</var>,
+     <span class=XXX>and <var>asyncContext</var></span>.
     </ol>
 
    <li>
@@ -4878,13 +4917,13 @@ steps:
     </ol>
 
    <li><p><a>Queue a fetch task</a> to run <var>processResponseEndOfBodyTask</var> with
-   <var>fetchParams</var>'s <a for="fetch params">task destination</a>.
+   <var>fetchParams</var>'s <a for="fetch params">task destination</a> and <var>asyncContext</var>.
   </ol>
 
  <li><p>If <var>fetchParams</var>'s <a for="fetch params">process response</a> is non-null, then
  <a>queue a fetch task</a> to run <var>fetchParams</var>'s
  <a for="fetch params">process response</a> given <var>response</var>, with <var>fetchParams</var>'s
- <a for="fetch params">task destination</a>.
+ <a for="fetch params">task destination</a> and <var>asyncContext</var>.
 
  <li><p>Let <var>internalResponse</var> be <var>response</var>, if <var>response</var> is a
  <a>network error</a>; otherwise <var>response</var>'s
@@ -4930,11 +4969,11 @@ steps:
 
    <li><p>If <var>internalResponse</var>'s <a for=response>body</a> is null, then
    <a>queue a fetch task</a> to run <var>processBody</var> given null, with <var>fetchParams</var>'s
-   <a for="fetch params">task destination</a>.
+   <a for="fetch params">task destination</a> and <var>asyncContext</var>.
 
    <li><p>Otherwise, <a for=body>fully read</a> <var>internalResponse</var>'s
-   <a for=response>body</a> given <var>processBody</var>, <var>processBodyError</var>, and
-   <var>fetchParams</var>'s <a for="fetch params">task destination</a>.
+   <a for=response>body</a> given <var>processBody</var>, <var>processBodyError</var>,
+   <var>fetchParams</var>'s <a for="fetch params">task destination</a>, and <var>asyncContext</var>.
   </ol>
 </ol>
 </div>
@@ -4943,8 +4982,9 @@ steps:
 <h3 id=scheme-fetch oldids=basic-fetch>Scheme fetch</h3>
 
 <div algorithm>
-<p>To <dfn id=concept-scheme-fetch oldids=concept-basic-fetch>scheme fetch</dfn>, given a
-<a for=/>fetch params</a> <var>fetchParams</var>:
+<p>To <dfn id=concept-scheme-fetch oldids=concept-basic-fetch>scheme fetch</dfn>, given
+a <a for=/>fetch params</a> <var>fetchParams</var>
+and an AsyncContext <var>asyncContext</var>:
 
 <ol>
  <li><p>If <var>fetchParams</var> is <a for="fetch params">canceled</a>, then return the
@@ -5123,7 +5163,8 @@ steps:
     <p>When in doubt, return a <a>network error</a>.
 
    <dt><a>HTTP(S) scheme</a>
-   <dd><p>Return the result of running <a>HTTP fetch</a> given <var>fetchParams</var>.
+   <dd><p>Return the result of running <a>HTTP fetch</a> given <var>fetchParams</var> and
+   <var>asyncContext</var>.
   </dl>
 
  <li><p>Return a <a for=/>network error</a>.
@@ -5149,9 +5190,11 @@ steps:
 <h3 id=http-fetch>HTTP fetch</h3>
 
 <div algorithm>
-<p>To <dfn export id=concept-http-fetch>HTTP fetch</dfn>, given a <a for=/>fetch params</a>
-<var>fetchParams</var> and an optional boolean <var>makeCORSPreflight</var> (default false), run
-these steps:
+<p>To <dfn export id=concept-http-fetch>HTTP fetch</dfn>, given
+a <a for=/>fetch params</a> <var>fetchParams</var>,
+an AsyncContext <var>asyncContext</var>,
+and an optional boolean <var>makeCORSPreflight</var> (default false),
+run these steps:
 <!-- This is exported for service workers, but that specification only mentions it in passing. -->
 
 <ol>
@@ -5206,6 +5249,7 @@ these steps:
    <var>requestForServiceWorker</var>, with <var>fetchParams</var>'s
    <a for="fetch params">controller</a> and <var>fetchParams</var>'s
    <a for="fetch params">cross-origin isolated capability</a>. [[!HTML]] [[!SW]]
+    <p class=XXX>I don't think that this needs the AsyncContext, but haven't fully verified.
 
    <li>
     <p>If <var>response</var> is non-null, then:
@@ -5341,7 +5385,7 @@ these steps:
        <li><p>If <var>request</var>'s <a for=request>mode</a> is "<code>navigate</code>", then set
        <var>fetchParams</var>'s <a for="fetch params">controller</a>'s
        <a for="fetch controller">next manual redirect steps</a> to run <a>HTTP-redirect fetch</a>
-       given <var>fetchParams</var> and <var>response</var>.
+       given <var>fetchParams</var>, <var>response</var>, and <var>asyncContext</var>.
 
        <li><p>Otherwise, set <var>response</var> to an <a>opaque-redirect filtered response</a>
        whose <a for="filtered response">internal response</a> is <var>internalResponse</var>.
@@ -5350,7 +5394,7 @@ these steps:
      <dt>"<code>follow</code>"
      <dd>
       <ol><li><p>Set <var>response</var> to the result of running <a>HTTP-redirect fetch</a> given
-      <var>fetchParams</var> and <var>response</var>.</ol>
+      <var>fetchParams</var>, <var>response</var>, and <var>asyncContext</var>.</ol>
     </dl>
     <!-- not resetting internalResponse since it's no longer used anyway -->
   </ol>
@@ -5365,8 +5409,10 @@ these steps:
 <h3 id=http-redirect-fetch>HTTP-redirect fetch</h3>
 
 <div algorithm>
-<p>To <dfn export id=concept-http-redirect-fetch>HTTP-redirect fetch</dfn>, given a
-<a for=/>fetch params</a> <var>fetchParams</var> and a <a for=/>response</a> <var>response</var>,
+<p>To <dfn export id=concept-http-redirect-fetch>HTTP-redirect fetch</dfn>, given
+a <a for=/>fetch params</a> <var>fetchParams</var>,
+an AsyncContext <var>asyncContext</var>,
+and a <a for=/>response</a> <var>response</var>,
 run these steps:
 
 <ol>
@@ -5476,8 +5522,8 @@ run these steps:
   </ol>
 
  <li>
-  <p>Return the result of running <a>main fetch</a> given <var>fetchParams</var> and
-  <var>recursive</var>.
+  <p>Return the result of running <a>main fetch</a> given <var>fetchParams</var>,
+  <var>asyncContext</var>, and <var>recursive</var>.
 
   <p class=note>This has to invoke <a>main fetch</a> to get <var>request</var>'s
   <a for=request>response tainting</a> correct.
@@ -5489,9 +5535,10 @@ run these steps:
 
 <div algorithm>
 <p>To <dfn id=concept-http-network-or-cache-fetch>HTTP-network-or-cache fetch</dfn>, given a
-<a for=/>fetch params</a> <var>fetchParams</var>, an optional boolean
-<var>isAuthenticationFetch</var> (default false), and an optional boolean
-<var>isNewConnectionFetch</var> (default false), run these steps:
+<a for=/>fetch params</a> <var>fetchParams</var>,
+an AsyncContext <var>asyncContext</var>,
+an optional boolean <var>isAuthenticationFetch</var> (default false),
+and an optional boolean <var>isNewConnectionFetch</var> (default false), run these steps:
 
 <p class=note>Some implementations might support caching of partial content, as per
 <cite>HTTP Caching</cite>. However, this is not widely supported by browser caches.
@@ -5806,7 +5853,8 @@ run these steps:
 
          <li>
           <p><a>In parallel</a>, run <a>main fetch</a> given a new <a for=/>fetch params</a> whose
-          <a for="fetch params">request</a> is <var>revalidateRequest</var>.
+          <a for="fetch params">request</a> is <var>revalidateRequest</var> and
+          <var>asyncContext</var>.
 
           <p class=note>This fetch is only meant to update the state of <var>httpCache</var>
           and the response will be unused until another cache access. The stale response will be used
@@ -6137,7 +6185,8 @@ optional boolean <var>forceNewConnection</var> (default false), run these steps:
          <li><p>If <var>status</var> is 103 and <var>fetchParams</var>'s
          <a for="fetch params">process early hints response</a> is non-null, then
          <a>queue a fetch task</a> to run <var>fetchParams</var>'s
-         <a for="fetch params">process early hints response</a>, with <a for=/>response</a>.
+         <a for="fetch params">process early hints response</a>, with <a for=/>response</a> and
+         <var>asyncContext</var>.
 
          <li><p><a for=iteration>Continue</a>.
         </ol>
@@ -6171,7 +6220,7 @@ optional boolean <var>forceNewConnection</var> (default false), run these steps:
      <a for="fetch params">process request end-of-body</a> is non-null, then
      <a>queue a fetch task</a> given <var>fetchParams</var>'s
      <a for="fetch params">process request end-of-body</a> and <var>fetchParams</var>'s
-     <a for="fetch params">task destination</a>.
+     <a for="fetch params">task destination</a> and <var>asyncContext</var>.
 
      <li>
       <p>Otherwise, if <var>body</var> is non-null:
@@ -6220,8 +6269,9 @@ optional boolean <var>forceNewConnection</var> (default false), run these steps:
         </ol>
 
        <li><p><a for=body>Incrementally read</a> <var>request</var>'s <a for=request>body</a> given
-       <var>processBodyChunk</var>, <var>processEndOfBody</var>, <var>processBodyError</var>, and
-       <var>fetchParams</var>'s <a for="fetch params">task destination</a>.
+       <var>processBodyChunk</var>, <var>processEndOfBody</var>, <var>processBodyError</var>,
+       <var>fetchParams</var>'s <a for="fetch params">task destination</a>, and
+       <var>asyncContext</var>.
        <!-- This obtains a reader in parallel, but it's mostly fine since we already proxied the
             input stream as part of the Request constructor. -->
       </ol>
@@ -6262,7 +6312,7 @@ optional boolean <var>forceNewConnection</var> (default false), run these steps:
 
      <li>
       <p>[=Queue a fetch task=] to run the following steps, with |fetchParams|'s
-      [=task destination=].
+      [=task destination=] and <var>asyncContext</var>.
 
       <ol>
        <li><p>[=ReadableStream/Pull from bytes=] |buffer| into |stream|.
