@@ -389,21 +389,12 @@ and an AsyncContext <var>asyncContext</var>,
 run these steps:
 
 <ol>
- <li>
-  <p>Let <var>wrappedAlgorithm</var> be an algorithm that runs the following steps:
-  <ol>
-   <li><p>Let <var>oldAsyncContext</var> be AsyncContextSwap(<var>asyncContext</var>).
-   <li><p>Run <var>algorithm</var>.
-   <li><p>Perform AsyncContextSwap(<var>oldAsyncContext</var>).
-  </ol>
- </li>
-
  <li><p>If <var>taskDestination</var> is a <a for=/>parallel queue</a>, then
- <a lt="enqueue steps" for="parallel queue">enqueue</a> <var>wrappedAlgorithm</var> to
- <var>taskDestination</var>.
+ <a lt="enqueue steps" for="parallel queue">enqueue</a> <var>algorithm</var> to
+ <var>taskDestination</var>, with <var>asyncContext</var>.
 
  <li><p>Otherwise, <a>queue a global task</a> on the <a>networking task source</a> with
- <var>taskDestination</var> and <var>wrappedAlgorithm</var>.
+ <var>taskDestination</var>, <var>algorithm</var>, and <var>asyncContext</var>.
 </ol>
 </div>
 
