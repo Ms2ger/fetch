@@ -4247,8 +4247,8 @@ a <a for=/>request</a> and one or more algorithms to run at various points durin
 can be used to capture uploads.
 
 <div algorithm="fetch">
-<p>To <dfn export id=concept-fetch>fetch</dfn>, given a <a for=/>request</a> <var>request</var>, an
-optional algorithm
+<p>To <dfn export id=concept-fetch>fetch</dfn>, given a <a for=/>request</a> <var>request</var> and
+an Async Context <var>asyncContext</var>, an optional algorithm
 <dfn export for=fetch id=process-request-body><var>processRequestBodyChunkLength</var></dfn>, an
 optional algorithm
 <dfn export for=fetch id=process-request-end-of-body oldids=process-request-end-of-file><var>processRequestEndOfBody</var></dfn>,
@@ -4440,10 +4440,6 @@ the response. [[!HTTP-CACHING]]
    <li><p>Append <var>record</var> to <var>request</var>'s <a for=request>client</a>'s
    <a for=fetch>fetch group</a> list of <a for="fetch group">fetch records</a>.
   </ol>
-
- <li><p>Let <var>asyncContext</var> be AsyncContextSnapshot().
-  <p class=XXX>I have not verified that this algorithm is always run in the event loop, but it is
-  in the XHR case I'm working on.
 
  <li><p>Run <a>main fetch</a> given <var>fetchParams</var> and <var>asyncContext</var>.
 
